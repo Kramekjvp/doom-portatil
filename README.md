@@ -23,17 +23,25 @@ doom-portatil/
 
 ## Decisões já tomadas
 
-- **Microcontrolador:** ESP32
-- **Source port do Doom:** doomgeneric
-
-Detalhadas em `docs/adr/` (a formalizar).
+- **Microcontrolador:** ESP32 (`docs/adr/0001-microcontrolador-esp32.md`)
+- **Source port do Doom:** doomgeneric (`docs/adr/0002-source-port-doomgeneric.md`)
+- **Protocolo serial MCU → Pi:** `docs/adr/0003-protocolo-serial.md`
 
 ## Decisões em aberto
 
 - Tela: SPI vs. HDMI pequena
 
+## Documentação
+
+- `docs/requirements.md` — requisitos formais do MVP
+- `docs/adr/` — decisões de arquitetura
+- `docs/architecture.svg` — diagrama de arquitetura preliminar
+- `docs/dev-environment.md` — ambiente de desenvolvimento
+- `docs/tasks.md` — quadro de tarefas por fase
+
 ## Status
 
-Projeto em planejamento. Ainda não há hardware físico — o desenvolvimento
-começou pelo código (protocolo serial, backend de renderização, firmware do
-ESP32 isolado) para reduzir o risco de atraso na entrega de componentes.
+Projeto em planejamento formalizado. Ainda não há hardware físico — o
+desenvolvimento começou pelo código (protocolo serial, backend de
+renderização, firmware do ESP32 isolado) para reduzir o risco de atraso na
+entrega de componentes.
