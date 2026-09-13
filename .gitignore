@@ -5,9 +5,9 @@
 *.bin
 *.map
 *.d
-build/
-bin/
-obj/
+/build/
+/bin/
+/obj/
 
 # --- PlatformIO (mcu-firmware) ---
 .pio/
