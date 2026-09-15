@@ -1,31 +1,35 @@
-# ADR 0002 — Source port do Doom: doomgeneric
+# ADR-0002: doomgeneric como source port
 
 ## Status
-Aceita
+Aceita. Consequências revisadas após a ADR-0006 (o alvo de execução
+deixou de ser Linux/Raspberry Pi e passou a ser bare-metal no ESP32-S3).
 
 ## Contexto
-A tela final do console (SPI ou HDMI pequena) ainda não estava definida no
-momento de começar o código. Era necessário um source port cuja camada de
-renderização pudesse ser trocada sem alterar a lógica do jogo, para não
-travar o desenvolvimento na decisão de hardware de display.
+Precisa de um source port do Doom portável, cuja camada de renderização
+possa ser trocada conforme a plataforma de destino — antes, entre
+SDL (desenvolvimento local) e framebuffer/DRM (Raspberry Pi); agora,
+entre SDL (desenvolvimento local) e um backend bare-metal que escreve
+direto na tela SPI do ESP32-S3.
 
 ## Alternativas consideradas
-- **Chocolate Doom** / **PrBoom+** — mais recursos prontos (menus, configs,
-  compatibilidade), porém mais acoplados ao ambiente de desktop tradicional,
-  exigindo mais trabalho para portar para um backend de framebuffer/DRM
-  mínimo.
-- **doomgeneric** — separa explicitamente o core do jogo da camada de
-  desenho, pensado para portabilidade em plataformas embarcadas.
+Chocolate Doom, PrBoom+ (mais completos/fiéis, porém mais acoplados a
+SDL/X11, mais trabalho pra portar pra um alvo sem sistema operacional)
+vs. doomgeneric (já separa o core do jogo da camada de renderização via
+uma interface fina de callback — motivo original da escolha, e o que
+torna viável portar pra bare-metal sem reescrever a lógica do jogo).
 
 ## Decisão
-doomgeneric, com o backend de renderização implementado como módulo
-isolado (interface simples de "desenhar frame"), permitindo trocar entre
-um backend de teste (SDL, para desenvolvimento no notebook), framebuffer/
-DRM da Pi e, futuramente, o driver da tela final.
+doomgeneric, mantido.
 
 ## Consequências
-- A escolha entre tela SPI e HDMI pode continuar em aberto sem bloquear o
-  desenvolvimento do restante do jogo.
-- doomgeneric tem menos recursos "de fábrica" (menus, configurações) que
-  Chocolate Doom/PrBoom+ — aceitável, pois esses itens não fazem parte do
-  MVP.
+- O backend de renderização usado durante o desenvolvimento (SDL, no
+  notebook) continua válido como ambiente de teste rápido.
+- O backend de produção deixa de ser framebuffer/DRM sobre Linux e passa
+  a ser um backend bare-metal escrito para o ESP32-S3, escrevendo direto
+  no controlador da tela SPI (ILI9341/ST7789, ver ADR-0004) — sem
+  `/dev/fbX`, sem driver de kernel, sem sistema operacional embaixo.
+- Existe precedente real dessa combinação específica (doomgeneric +
+  ESP32-S3 + tela SPI ILI9341), reduzindo o risco de portabilidade.
+- A build de referência em Linux/SDL (validada antes da ADR-0006) segue
+  útil como ambiente de teste da lógica do jogo, mas deixa de ser o
+  caminho de produção.

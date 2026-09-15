@@ -1,47 +1,58 @@
 # Doom Portátil
 
-Console portátil rodando Doom, projeto da disciplina de Sistemas Embarcados.
+Console portátil rodando Doom — e, como extensão futura, jogos de Game
+Boy e Tetris — projeto da disciplina de Sistemas Embarcados.
 
-A Raspberry Pi executa o motor do jogo (vídeo e áudio). Um microcontrolador
-cuida de entrada de botões, gerenciamento de bateria e desligamento seguro.
-Os dois se comunicam por um protocolo serial simples.
+Um **ESP32-S3 N16R8** executa os jogos (motor gráfico, launcher,
+storage e áudio, quando entrarem em escopo). Um **ESP32-C3**, dedicado,
+cuida de entrada de botões, leitura de bateria e desligamento seguro. Os
+dois se comunicam por um protocolo serial simples.
 
-O objetivo não é só "Doom rodando numa Pi" — o projeto existe para demonstrar
-conceitos reais de sistemas embarcados: comunicação entre dispositivos,
-tempo real em I/O e gerenciamento de energia.
+> Arquitetura anterior (Raspberry Pi Zero 2 W + ESP32 genérico para I/O)
+> substituída — ver `docs/adr/0006-arquitetura-dois-chips-esp32.md`.
 
-## Estrutura do repositório
+## Estrutura do repositório (proposta)
 
 ```
 doom-portatil/
-├── pi-doom/        # source port do Doom + daemon que lê a serial e injeta eventos
-├── mcu-firmware/   # firmware do microcontrolador (botões, bateria, shutdown)
-├── docs/           # requisitos, ADRs (decisões de arquitetura) e diagramas
-│   └── adr/        # registro das decisões de arquitetura, uma por arquivo
-└── hardware/       # BOM, esquemáticos e arquivos de case (quando existirem)
+├── firmware-s3/     # ESP32-S3: launcher, doomgeneric, jogos futuros, gráfico, áudio
+├── firmware-c3/      # ESP32-C3: botões, bateria, desligamento seguro
+├── tools/             # protocolo de referência em Python (design/teste, não roda em produção)
+│   ├── protocol.py
+│   └── tests/
+├── docs/              # requisitos, ADRs, diagramas
+│   └── adr/
+└── hardware/          # BOM, esquemáticos
 ```
+
+`pi-doom/` e `mcu-firmware/` (nomes antigos) saem de uso — ver ADR-0006
+pra migrar o que já existia.
 
 ## Decisões já tomadas
 
-- **Microcontrolador:** ESP32 (`docs/adr/0001-microcontrolador-esp32.md`)
-- **Source port do Doom:** doomgeneric (`docs/adr/0002-source-port-doomgeneric.md`)
-- **Protocolo serial MCU → Pi:** `docs/adr/0003-protocolo-serial.md`
-
-## Decisões em aberto
-
-- Tela: SPI vs. HDMI pequena
+- **Arquitetura:** dois chips, ESP32-S3 (jogos) + ESP32-C3 (I/O) —
+  `docs/adr/0006-arquitetura-dois-chips-esp32.md` (substitui `0001`)
+- **Source port do Doom:** doomgeneric, agora bare-metal —
+  `docs/adr/0002-source-port-doomgeneric.md`
+- **Protocolo serial ESP32-C3 ↔ ESP32-S3:**
+  `docs/adr/0003-protocolo-serial.md`
+- **Tela:** SPI, ILI9341/ST7789 — `docs/adr/0004-tela-spi.md`
+- **Extensão pós-Doom (Game Boy + Tetris):**
+  `docs/adr/0005-multiplos-jogos.md`
 
 ## Documentação
 
-- `docs/requirements.md` — requisitos formais do MVP
+- `docs/requirements.md` — requisitos formais
 - `docs/adr/` — decisões de arquitetura
-- `docs/architecture.svg` — diagrama de arquitetura preliminar
+- `docs/architecture.svg` — diagrama de blocos
 - `docs/dev-environment.md` — ambiente de desenvolvimento
 - `docs/tasks.md` — quadro de tarefas por fase
 
 ## Status
 
-Projeto em planejamento formalizado. Ainda não há hardware físico — o
-desenvolvimento começou pelo código (protocolo serial, backend de
-renderização, firmware do ESP32 isolado) para reduzir o risco de atraso na
-entrega de componentes.
+Pivô de arquitetura em andamento: saindo de Raspberry Pi + ESP32 (I/O)
+para ESP32-S3 + ESP32-C3 (dois microcontroladores, sem Linux). O
+protocolo serial e sua lógica de parsing/checksum permanecem válidos
+como referência de design; a implementação em Python específica de
+Linux (`uinput`, daemon) fica obsoleta como código de produção e será
+reescrita como firmware C dentro de `firmware-s3/` e `firmware-c3/`.

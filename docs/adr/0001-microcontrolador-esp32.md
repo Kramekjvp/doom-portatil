@@ -1,31 +1,27 @@
-# ADR 0001 — Microcontrolador: ESP32
+# ADR-0001: Uso do ESP32 como microcontrolador
 
 ## Status
-Aceita
+Superada pela ADR-0006. A escolha de usar um ESP32 para o papel de I/O
+se mantém — a ADR-0006 apenas passa a nomear o chip especificamente
+(ESP32-C3) e adiciona um segundo ESP32 (S3) para o papel que antes era
+da Raspberry Pi.
 
 ## Contexto
-O microcontrolador do console precisa: ler botões (D-pad + 2 de ação) com
-debounce confiável, ler a tensão da bateria via ADC, implementar a lógica
-de shutdown seguro e se comunicar com a Raspberry Pi por UART. As opções
-consideradas foram ESP32 e STM32.
+Precisava de um MCU para leitura de botões, ADC de bateria, lógica de
+shutdown e comunicação serial com a Raspberry Pi (arquitetura original).
+Alternativas consideradas: ESP32 ou STM32.
 
 ## Alternativas consideradas
-- **STM32** — mais próximo de "bare metal" (HAL direto ou registradores),
-  mais alinhado ao espírito da disciplina de Sistemas Embarcados, mas com
-  ciclo de prototipagem mais lento.
-- **ESP32** — framework Arduino/ESP-IDF com bibliotecas prontas para UART,
-  ADC e deep sleep, prototipagem mais rápida.
+STM32 (mais bare-metal, mais alinhado à disciplina, porém prototipagem
+mais lenta) vs. ESP32 (bibliotecas prontas para UART/ADC, prototipagem
+mais rápida).
 
 ## Decisão
-ESP32, usando o framework Arduino via PlatformIO, com possibilidade de
-chamar APIs do ESP-IDF diretamente quando algo mais fino for necessário
-(ex: configuração de deep sleep no shutdown).
+ESP32, priorizando velocidade de prototipagem dado o cronograma do
+projeto.
 
 ## Consequências
-- Ciclo de desenvolvimento mais rápido para o MVP, com menos tempo gasto em
-  drivers de baixo nível.
-- Wi-Fi/Bluetooth do chip não são usados no MVP, mas ficam disponíveis caso
-  se queira adicionar telemetria ou debug remoto depois.
-- Menos "bare metal" que a alternativa STM32 — se o critério de avaliação
-  da disciplina valorizar isso, vale registrar essa escolha explicitamente
-  no relatório final como uma troca consciente entre profundidade e prazo.
+- Firmware em C/C++ via PlatformIO ou ESP-IDF.
+- Essa decisão permanece válida mesmo após a ADR-0006 — o que muda é a
+  arquitetura ao redor dela, não a escolha do chip em si para o papel de
+  I/O.

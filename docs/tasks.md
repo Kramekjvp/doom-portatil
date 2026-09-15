@@ -1,43 +1,48 @@
 # Quadro de tarefas
 
-Baseado nas fases do roteiro de produção do projeto. Formato simples em
-markdown, versionado junto com o código.
+Reestruturado após a ADR-0006 (substituição da Raspberry Pi). Itens já
+validados sob a arquitetura antiga foram reclassificados honestamente:
+o que continua válido como lógica/design permanece marcado; o que
+dependia especificamente de Linux/Raspberry Pi volta a ficar pendente,
+porque precisa ser refeito no novo alvo.
 
 ## Fase 0 — Planejamento e fundação do projeto
 - [x] Estrutura do repositório
 - [x] Requisitos formais (`docs/requirements.md`)
-- [x] ADRs: microcontrolador, source port, protocolo serial
-- [x] Diagrama de arquitetura preliminar
-- [x] Ambiente de desenvolvimento documentado
-- [ ] Confirmar com o professor o nível de profundidade esperado
-- [ ] Levantar todos os componentes e prazos de entrega
+- [x] ADRs (0001–0006, incluindo a arquitetura de dois chips)
+- [x] Diagrama de arquitetura (atualizado para ESP32-S3 + ESP32-C3)
+- [x] Ambiente de desenvolvimento documentado (atualizado para ESP-IDF)
+- [ ] Confirmar com o professor o nível de profundidade esperado — e a
+  mudança de Raspberry Pi para dois ESP32
+- [ ] Levantar componentes e prazos de entrega (lista de compra atualizada)
 
-## Fase 1 — Prova de conceito: Pi rodando Doom sozinha
-- [x] Build do doomgeneric localmente (backend SDL, sem hardware — validado no Arch)
-- [ ] Instalar sistema mínimo na Pi (sem desktop)
-- [ ] Validar saída de vídeo via framebuffer/DRM
-- [ ] Validar áudio básico
+## Fase 1 — Prova de conceito: doomgeneric no ESP32-S3
+- [ ] Configurar toolchain ESP-IDF/PlatformIO para o N16R8 (16MB flash / 8MB PSRAM)
+- [ ] Escrever driver bare-metal da tela SPI escolhida
+- [ ] Escrever o backend de renderização do doomgeneric para esse driver
+- [ ] Doom rodando na tela física, com entrada de teste (sem o ESP32-C3 ainda)
 
-## Fase 2 — Microcontrolador isolado
+## Fase 2 — ESP32-C3 isolado
 - [ ] Leitura de botões com debounce confiável
-- [ ] Leitura de tensão da bateria via ADC
-- [ ] Envio de eventos de teste via UART seguindo o protocolo (ADR-0003)
+- [ ] Leitura de tensão da bateria via ADC (conferir calibração na doc atual da Espressif)
+- [ ] Envio de eventos via UART seguindo o protocolo (ADR-0003)
 - [ ] Lógica de detecção do botão de power
 
-## Fase 3 — Integração MCU + Pi
-- [x] Simular o MCU com porta serial virtual (socat) + script Python
-- [x] Daemon na Pi lendo a serial e injetando eventos via uinput (validado end-to-end com o simulador, Arch Linux)
-- [x] Testar D-pad e botões controlando o Doom de fato (validado no Arch, sem hardware — daemon + simulador)
+## Fase 3 — Integração ESP32-C3 + ESP32-S3
+- [x] Lógica do protocolo (parsing/checksum) validada — 8/8 testes em
+  Python, mantida como referência de design em `tools/`
+- [ ] Porta da lógica do protocolo para C, rodando de verdade no ESP32-S3
+- [ ] Testar D-pad e botões controlando o Doom no hardware real
 
 ## Fase 4 — Energia e shutdown seguro
 - [ ] Integrar bateria + carregamento no circuito real
-- [ ] Rotina de shutdown seguro (MCU → Pi → desmonta FS → corta energia)
-- [ ] 10 ciclos de liga/desliga sem corromper o cartão SD
+- [ ] Rotina de shutdown seguro (ESP32-C3 → ESP32-S3 → confirma → corta energia)
+- [ ] 10 ciclos de liga/desliga sem corrupção de dados
 
-## Fase 5 — Tela e áudio finais
-- [x] Fechar decisão de tela (SPI, ver ADR-0004)
-- [ ] Trocar backend de teste pela tela definitiva
-- [ ] Integrar áudio final, se entrar no escopo
+## Fase 5 — Launcher e estrutura para múltiplos jogos
+- [ ] Escrever o launcher (menu de seleção via D-pad)
+- [ ] Escrever a camada de abstração de input (protocolo → ação virtual → jogo)
+- [ ] Doom rodando através do launcher, não mais standalone
 
 ## Fase 6 — Montagem física
 - [ ] Fiação definitiva / PCB perfurada
@@ -47,14 +52,17 @@ markdown, versionado junto com o código.
 ## Fase 7 — Fechamento
 - [ ] Testes finais end-to-end
 - [ ] Vídeo de demonstração (backup)
-- [ ] Relatório/slides explicando arquitetura e decisões
+- [ ] Relatório/slides explicando arquitetura e decisões (inclusive o
+  pivô Raspberry Pi → dois ESP32)
 - [ ] Ensaiar a apresentação
 
-## Fase 8 — Extensão opcional: múltiplos jogos (pós-MVP)
-Só começa depois das Fases 0–7 fechadas com folga (ver ADR-0005).
-- [ ] Confirmar que sobrou tempo real antes de iniciar
-- [ ] Integrar Peanut-GB com um backend de framebuffer próprio
-- [ ] Escrever/adaptar um clone de Tetris open-source pro framebuffer
-- [ ] Escrever o launcher (menu de seleção de jogo via D-pad)
+## Fase 8 — Extensão condicional: mais jogos (ver ADR-0005)
+Só avança se Doom + launcher + input estiverem funcionando de verdade no
+hardware, com folga de prazo.
+- [ ] Ponto de checagem: confirmar que sobrou tempo real antes de seguir
+- [ ] Peanut-GB (Game Boy DMG) integrado ao launcher
 - [ ] Obter a ROM de Pokémon por dump de cartucho próprio (não redistribuir)
-- [ ] Testar os três jogos (Doom, Game Boy, Tetris) com os botões físicos
+- [ ] Tetris (implementação própria) integrado ao launcher
+- [ ] Se sobrar tempo depois disso: trocar Peanut-GB por Walnut-CGB (Game Boy Color)
+- [ ] Áudio (I²S + MAX98357A) — só depois do resto estável
+- [ ] Armazenamento em microSD (ROMs, saves, configuração)

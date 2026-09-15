@@ -1,30 +1,42 @@
-# ADR 0003 — Protocolo serial MCU → Pi
+# ADR-0003: Protocolo serial ESP32-C3 → ESP32-S3
 
 ## Status
-Aceita
+Aceita. Terminologia atualizada após a ADR-0006 — o "Pi" das versões
+anteriores desta ADR é o ESP32-S3; o "MCU" é o ESP32-C3. O formato da
+mensagem não muda.
 
 ## Contexto
-MCU (`mcu-firmware/`) e Pi (`pi-doom/`) são desenvolvidos e testados de
-forma independente, inclusive antes de existir hardware físico (via porta
-serial virtual simulada com socat). Era necessário um protocolo simples de
-definir, fácil de depurar num terminal serial cru, e simples de decodificar
-no daemon que injeta eventos via uinput.
+O ESP32-C3 precisa informar o ESP32-S3 sobre eventos de botão
+(pressionar/soltar) e sinal de power-off, de forma simples de depurar
+manualmente com um terminal serial comum.
+
+## Alternativas consideradas
+Protocolo binário compacto (menor overhead, mais difícil de depurar sem
+ferramentas) vs. protocolo texto tipo linha (fácil de ler no terminal,
+mais overhead, parsing mais simples).
 
 ## Decisão
-Mensagens de 3 bytes: 1 byte de tipo de evento + 1 byte de payload + 1 byte
-de checksum.
+Protocolo binário simples de 3 bytes: `[cabeçalho][payload][checksum]`,
+equilibrando simplicidade de parsing com possibilidade de depuração
+manual (valores em hexadecimal ainda são legíveis).
 
-| Byte 1 (tipo)      | Byte 2 (payload)         | Byte 3        |
-|---|---|---|
-| `0x01` — botão      | código do botão pressionado/solto | checksum |
-| `0x02` — power-off solicitado | não usado (`0x00`) | checksum |
-| `0x03` — ack de shutdown seguro | não usado (`0x00`) | checksum |
+- Byte 1 — tipo de evento: `0x01` botão, `0x02` power-off solicitado,
+  `0x03` ack de shutdown seguro.
+- Byte 2 — payload: pra botão, `(pressed << 7) | button_id`; pros
+  demais tipos, `0x00`.
+- Byte 3 — checksum: XOR dos dois bytes anteriores. Mensagens com
+  checksum inválido são descartadas pelo receptor.
+
+Botões: `0`=UP, `1`=DOWN, `2`=LEFT, `3`=RIGHT, `4`=AÇÃO A, `5`=AÇÃO B —
+com `6`=START e `7`=SELECT reservados pra quando o Game Boy (ADR-0005)
+entrar em desenvolvimento.
 
 ## Consequências
-- Protocolo trivial de implementar dos dois lados e de inspecionar
-  manualmente durante testes.
-- Sem correção de erro além do checksum simples — aceitável dado que a
-  distância física e o baud rate envolvidos são pequenos, dentro do
-  escopo do MVP.
-- Extensível: novos tipos de evento (ex: nível de bateria) podem ser
-  adicionados sem quebrar o formato existente.
+- Overhead pequeno (3 bytes por evento), adequado à baixa frequência de
+  eventos de botão.
+- Precisa de lógica de resync caso a UART perca sincronismo — o receptor
+  deve procurar pelo byte de cabeçalho conhecido antes de interpretar o
+  restante da mensagem.
+- Lógica de parsing/checksum já validada em Python (`protocol.py`, 8/8
+  testes) — serve como referência de design ao reimplementar em C nos
+  dois firmwares (ver ADR-0006).
