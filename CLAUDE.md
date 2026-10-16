@@ -22,11 +22,19 @@ rodando Linux/Python.** Se você está vendo referências a `pi-doom/`,
 git, isso é código da versão antiga — ver `docs/adr/0006-arquitetura-dois-chips-esp32.md`
 pro motivo da mudança e o que foi aproveitado.
 
+> **Atenção — decisões posteriores a este texto.** O ESP32-S3 passou a assumir
+> todas as funções e o ESP32-C3 saiu do BOM revisado; a tela é **paralela de
+> 8 bits (i80)**, não SPI (`docs/adr/0008-tela-ili9341-paralela-i80.md`); os botões
+> devem usar um expansor MCP23017 (I²C); o ambiente é Windows com ESP-IDF 6.0.3.
+> As seções abaixo sobre dois chips, protocolo serial e tela SPI são **históricas**
+> até existir um ADR registrando o S3 único.
+
 Documentação completa (não duplicar aqui, só apontar):
 - `README.md` — visão geral e decisões tomadas
 - `docs/requirements.md` — requisitos formais (RF01–RF05 + RNFs)
-- `docs/adr/` — decisões de arquitetura; `0001` e `0005` estão marcadas
-  como superadas mas não foram apagadas (histórico do projeto)
+- `docs/adr/` — decisões de arquitetura; `0001` e `0004` estão marcadas
+  como superadas mas não foram apagadas (histórico do projeto). `0008`
+  (tela paralela) e `0009` (camada de jogos) são as mais recentes
 - `docs/architecture.svg` — diagrama de blocos atual
 - `docs/dev-environment.md` — toolchain (ESP-IDF/PlatformIO, sem mais SDL/Linux em produção)
 - `docs/tasks.md` — **fonte de verdade** do que já foi feito por fase
@@ -36,12 +44,36 @@ Documentação completa (não duplicar aqui, só apontar):
 Testes da lógica do protocolo (referência de design, Python puro, sem
 hardware — a implementação real agora é em C dentro de `firmware-s3/`):
 ```bash
-cd tools/tests && python3 test_protocol.py
+cd pi-doom/tests && python3 test_protocol.py
 ```
 
-Build dos firmwares (ESP-IDF ou PlatformIO, alvo `esp32s3` e `esp32c3`
-respectivamente) — comandos exatos a confirmar assim que o ambiente for
-montado; ver `docs/dev-environment.md`.
+Testes do Tetris no PC (sem hardware; precisa de gcc — WSL ou MSYS2):
+```bash
+cd firmware-s3/host_test && make
+make SAN="-fsanitize=address,undefined"   # só Linux/WSL: acha estouro de índice
+```
+
+Build e gravação do teste na placa (terminal do ESP-IDF 6.0.3, Windows):
+```
+cd firmware-s3\examples\tetris_standalone
+idf.py set-target esp32s3
+idf.py menuconfig        # pinos em "LCD i80" e "Entrada: botoes em GPIO direto"
+idf.py build flash monitor
+```
+
+## Código do firmware-s3 (camadas)
+
+Cada camada só conhece a de baixo; **jogos nunca leem GPIO nem falam com a
+tela** — usam só os contratos de `game_api` (ADR-0009):
+
+```
+tetris_standalone (main) → tetris_game → tetris_core   (regras, C puro; autoria da dupla)
+                                │
+              game_api  (game.h, input.h, gfx.h — sem hardware)
+                                │
+              lcd_i80 (tela)   input_gpio (botões)      ← únicos que tocam hardware
+```
+Detalhes, pinos e o que ainda não foi verificado: `firmware-s3/README.md`.
 
 ## Protocolo (resumo rápido — detalhe completo na ADR-0003)
 
@@ -64,6 +96,12 @@ Botões: `0`=UP, `1`=DOWN, `2`=LEFT, `3`=RIGHT, `4`=AÇÃO A, `5`=AÇÃO B,
 - **Áudio (I2S) costuma conflitar com pinos da tela SPI** em projetos
   parecidos rodando doomgeneric em ESP32-S3 — por isso o áudio é a
   última camada a entrar (ADR-0005), depois de tudo o resto validado.
+- **Tela paralela (shield ILI9341):** alimentação/nível lógico dos buffers 245
+  do shield ainda em diagnóstico — conferir antes de culpar o código.
+- **ESP-IDF:** `build/`, `sdkconfig` e `managed_components/` não vão para o git;
+  `sdkconfig.defaults` só vale quando ainda não existe `sdkconfig` gerado.
+- **Pinos do ESP32-S3 N16R8:** evitar 0, 3, 19, 20, 26–37 (flash/PSRAM octal), 43–46;
+  38 e 48 podem ser o LED RGB conforme a placa.
 - **Walnut-CGB é um fork, não a biblioteca oficial** — se for adotado
   pro Game Boy Color, manter a atribuição correta da cadeia de autoria
   (Peanut-GB → fork CGB → Walnut-CGB) na documentação.
@@ -86,3 +124,5 @@ Botões: `0`=UP, `1`=DOWN, `2`=LEFT, `3`=RIGHT, `4`=AÇÃO A, `5`=AÇÃO B,
   do código Python da arquitetura anterior roda em produção agora.
 - Fase 8 (múltiplos jogos): estrutura (launcher + input) entra cedo,
   conteúdo dos jogos é condicional a sobrar tempo (ver ADR-0005).
+- Tetris (núcleo da dupla) já portado para as camadas do `firmware-s3` e testado
+  no PC; falta validar tela e botões na placa (ADR-0008 e ADR-0009).
