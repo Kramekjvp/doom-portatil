@@ -1,0 +1,46 @@
+menu "Entrada: botoes em GPIO direto"
+
+    comment "Cada botao liga o GPIO ao GND (usa pull-up interno). -1 = botao ausente."
+    comment "Pinos propostos evitam os da tela (4-10, 14-18, 21) e os reservados do S3 N16R8."
+
+    config INPUT_GPIO_UP
+        int "GPIO do botao CIMA"
+        range -1 48
+        default -1
+
+    config INPUT_GPIO_DOWN
+        int "GPIO do botao BAIXO"
+        range -1 48
+        default 1
+
+    config INPUT_GPIO_LEFT
+        int "GPIO do botao ESQUERDA"
+        range -1 48
+        default 2
+
+    config INPUT_GPIO_RIGHT
+        int "GPIO do botao DIREITA"
+        range -1 48
+        default 42
+
+    config INPUT_GPIO_A
+        int "GPIO do botao A (girar no Tetris)"
+        range -1 48
+        default 41
+
+    config INPUT_GPIO_B
+        int "GPIO do botao B (queda no Tetris)"
+        range -1 48
+        default 40
+
+    config INPUT_GPIO_START
+        int "GPIO do botao START (pausa no Tetris)"
+        range -1 48
+        default 39
+
+    config INPUT_GPIO_SELECT
+        int "GPIO do botao SELECT (sair para o launcher)"
+        range -1 48
+        default -1
+
+endmenu

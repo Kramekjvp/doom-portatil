@@ -1,8 +1,13 @@
 # ADR-0004: Tela SPI (ILI9341/ST7789)
 
 ## Status
-Aceita. Consequências atualizadas após a ADR-0006 — a tela conecta
-direto no ESP32-S3, não mais via GPIO da Raspberry Pi.
+Superada pela ADR-0008 quanto à interface do display (SPI → paralelo de
+8 bits, porque a tela comprada é um shield paralelo). O restante da
+decisão continua valendo: tela pequena em vez de HDMI e controlador
+ILI9341.
+
+Histórico: era "Aceita"; consequências atualizadas após a ADR-0006 — a
+tela conecta direto no ESP32-S3, não mais via GPIO da Raspberry Pi.
 
 ## Contexto
 O console precisa de um display para a saída do doomgeneric (e, no

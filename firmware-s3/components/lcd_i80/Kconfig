@@ -1,0 +1,93 @@
+menu "LCD i80 (ILI9341 paralelo 8 bits)"
+
+    comment "Pinos PROPOSTOS: evitam 0,3,19,20 (strapping/USB), 26-37 (flash/PSRAM octal), 43,44 (UART0), 45,46."
+    comment "A ordem D0..D7 e livre: o i80 do ESP32-S3 roteia qualquer GPIO. Ajuste ao que voce ligar de fato."
+
+    config LCD_I80_PIN_D0
+        int "GPIO de LCD_D0"
+        range 0 48
+        default 4
+
+    config LCD_I80_PIN_D1
+        int "GPIO de LCD_D1"
+        range 0 48
+        default 5
+
+    config LCD_I80_PIN_D2
+        int "GPIO de LCD_D2"
+        range 0 48
+        default 6
+
+    config LCD_I80_PIN_D3
+        int "GPIO de LCD_D3"
+        range 0 48
+        default 7
+
+    config LCD_I80_PIN_D4
+        int "GPIO de LCD_D4"
+        range 0 48
+        default 15
+
+    config LCD_I80_PIN_D5
+        int "GPIO de LCD_D5"
+        range 0 48
+        default 16
+
+    config LCD_I80_PIN_D6
+        int "GPIO de LCD_D6"
+        range 0 48
+        default 17
+
+    config LCD_I80_PIN_D7
+        int "GPIO de LCD_D7"
+        range 0 48
+        default 18
+
+    config LCD_I80_PIN_WR
+        int "GPIO de LCD_WR (clock de escrita)"
+        range 0 48
+        default 8
+
+    config LCD_I80_PIN_DC
+        int "GPIO de LCD_RS (dado/comando)"
+        range 0 48
+        default 9
+
+    config LCD_I80_PIN_CS
+        int "GPIO de LCD_CS"
+        range 0 48
+        default 10
+
+    config LCD_I80_PIN_RST
+        int "GPIO de LCD_RST (-1 = ligado ao reset da placa)"
+        range -1 48
+        default 14
+
+    config LCD_I80_PIN_RD
+        int "GPIO de LCD_RD (mantido em nivel alto; -1 = ligado direto em 3V3)"
+        range -1 48
+        default 21
+
+    config LCD_I80_PCLK_HZ
+        int "Clock de escrita (Hz)"
+        range 1000000 20000000
+        default 10000000
+        help
+            O ILI9341 aceita ~15 MHz em escrita. Em protoboard com jumpers,
+            comece em 10 MHz; se estiver estavel, tente 15 MHz.
+
+    config LCD_I80_MADCTL
+        hex "Registrador MADCTL (orientacao e ordem de cor)"
+        default 0x48
+        help
+            0x48 = retrato, BGR (padrao do TFT_eSPI, rotacao 0).
+            Se a imagem sair espelhada, tente 0x08, 0x88 ou 0xC8.
+            Se vermelho e azul estiverem trocados, alterne o bit 0x08.
+
+    config LCD_I80_INVERT
+        bool "Inverter cores (comando INVON)"
+        default n
+        help
+            Alguns paineis/shields precisam de INVON para cores corretas.
+
+endmenu
