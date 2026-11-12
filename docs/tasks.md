@@ -17,10 +17,15 @@ porque precisa ser refeito no novo alvo.
 - [ ] Levantar componentes e prazos de entrega (lista de compra atualizada)
 
 ## Fase 1 — Prova de conceito: doomgeneric no ESP32-S3
-- [ ] Configurar toolchain ESP-IDF/PlatformIO para o N16R8 (16MB flash / 8MB PSRAM)
-- [ ] Escrever driver bare-metal da tela SPI escolhida
-- [ ] Escrever o backend de renderização do doomgeneric para esse driver
+- [x] Configurar toolchain ESP-IDF para o N16R8 (ESP-IDF 6.0.3 no Windows; hello_world rodou na placa)
+- [x] Driver da tela (paralela i80, `lcd_i80`) escrito — falta validar na tela física
+- [x] Backend do doomgeneric (`components/doom_game`: DG_*, paleta→RGB565, 320×200→320×240,
+  controles com 8 botões) — validado no simulador do PC; ainda NÃO compilado para a placa (ADR-0010)
+- [x] Simulador no PC (`firmware-s3/sim/`): Doom e Tetris sem hardware, modo janela (SDL2) e `--headless`
+- [x] Launcher + firmware único (`components/launcher`, `app/`) — validado no simulador e no host_test; ainda NÃO compilado para a placa (ADR-0011)
+- [ ] Compilar `examples/doom_standalone` com o ESP-IDF e gravar o `doom1.wad` na partição `wad`
 - [ ] Doom rodando na tela física, com entrada de teste (sem o ESP32-C3 ainda)
+- [ ] Medir na placa: quadros/s, heap livre (zona de 6 MB), tamanho do binário
 
 ## Fase 2 — ESP32-C3 isolado
 - [ ] Leitura de botões com debounce confiável

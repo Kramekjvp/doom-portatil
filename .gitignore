@@ -47,4 +47,16 @@ firmware-s3/host_test/shots/
 firmware-s3/host_test/test_input
 firmware-s3/host_test/test_core
 firmware-s3/host_test/test_game
+firmware-s3/host_test/test_launcher
 firmware-s3/host_test/*.exe
+
+# --- Doom: dados de jogo nao entram no git (CLAUDE.md) ---
+*.wad
+*.WAD
+
+# --- Simulador no PC (firmware-s3/sim) ---
+firmware-s3/sim/build/
+firmware-s3/sim/build_headless/
+firmware-s3/sim/shots/
+firmware-s3/sim/.savegame/
+firmware-s3/sim/default.cfg

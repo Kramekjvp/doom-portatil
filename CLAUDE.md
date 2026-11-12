@@ -53,6 +53,14 @@ cd firmware-s3/host_test && make
 make SAN="-fsanitize=address,undefined"   # só Linux/WSL: acha estouro de índice
 ```
 
+Simulador no PC (Doom e Tetris sem hardware; MSYS2 UCRT64 + SDL2 — ver `firmware-s3/sim/README.md`):
+```bash
+cd firmware-s3/sim && make
+./build/portatil_sim.exe --wad ../../wad/doom1.wad                 # launcher (menu) + Tetris + Doom, como na placa
+./build/portatil_sim.exe --game doom --wad ../../wad/doom1.wad      # só o Doom (setas, Z=A, X=B, Enter=START)
+make headless && ./build_headless/portatil_sim.exe --game doom --wad doom1.wad --headless --frames 300 --shot 299
+```
+
 Build e gravação do teste na placa (terminal do ESP-IDF 6.0.3, Windows):
 ```
 cd firmware-s3\examples\tetris_standalone
@@ -68,12 +76,17 @@ tela** — usam só os contratos de `game_api` (ADR-0009):
 
 ```
 tetris_standalone (main) → tetris_game → tetris_core   (regras, C puro; autoria da dupla)
+doom_standalone   (main) → doom_game   → doomgeneric  (third_party/, GPL; ADR-0010)
+app (firmware único) (main) → launcher → { tetris_game, doom_game }  (ADR-0011)
                                 │
               game_api  (game.h, input.h, gfx.h — sem hardware)
                                 │
               lcd_i80 (tela)   input_gpio (botões)      ← únicos que tocam hardware
 ```
 Detalhes, pinos e o que ainda não foi verificado: `firmware-s3/README.md`.
+O simulador (`firmware-s3/sim/`) troca só `lcd_i80`/`input_gpio` por tela em framebuffer e teclado.
+Doom: tela em paisagem 320×240 (`gfx_set_orientation`), WAD numa partição de flash (`wad`),
+não reentrante (uma vez por boot) — ver ADR-0010 e `examples/doom_standalone/README.md`.
 
 ## Protocolo (resumo rápido — detalhe completo na ADR-0003)
 
@@ -105,6 +118,8 @@ Botões: `0`=UP, `1`=DOWN, `2`=LEFT, `3`=RIGHT, `4`=AÇÃO A, `5`=AÇÃO B,
 - **Walnut-CGB é um fork, não a biblioteca oficial** — se for adotado
   pro Game Boy Color, manter a atribuição correta da cadeia de autoria
   (Peanut-GB → fork CGB → Walnut-CGB) na documentação.
+- **Freedoom (28 MB) só roda no simulador**; na placa o WAD é o `doom1.wad` shareware (~4 MB, partição de 6 MB).
+- **Doom não é reentrante**: depois de sair, só reiniciando o chip.
 - **WAD (Doom) e ROMs (Game Boy) são dados de jogo, não código** — não
   versionar no git. ROMs comerciais só de cartucho próprio (dump legal).
 
@@ -126,3 +141,6 @@ Botões: `0`=UP, `1`=DOWN, `2`=LEFT, `3`=RIGHT, `4`=AÇÃO A, `5`=AÇÃO B,
   conteúdo dos jogos é condicional a sobrar tempo (ver ADR-0005).
 - Tetris (núcleo da dupla) já portado para as camadas do `firmware-s3` e testado
   no PC; falta validar tela e botões na placa (ADR-0008 e ADR-0009).
+- Firmware único (`app/`: launcher + Tetris + Doom) validado no simulador e no host_test; falta compilar para a placa (ADR-0011).
+- Doom: port (`doom_game`) e simulador no PC prontos e validados com Freedoom; falta compilar
+  para a placa, gravar o WAD e medir (ADR-0010).

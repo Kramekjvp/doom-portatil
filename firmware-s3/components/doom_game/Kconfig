@@ -1,0 +1,33 @@
+menu "Doom (doomgeneric)"
+
+    config DOOM_STRETCH_4_3
+        bool "Esticar 320x200 para 320x240 (4:3 como no VGA original)"
+        default y
+        help
+            O Doom desenha 320x200 com pixels nao quadrados (4:3 na tela do PC).
+            Ligado: repete 1 linha a cada 5 e preenche o painel 320x240 inteiro.
+            Desligado: imagem 320x200 centralizada, com 20 linhas pretas em cima e embaixo.
+
+    config DOOM_ALWAYS_RUN
+        bool "Correr sempre (sem botao de corrida)"
+        default y
+        help
+            O console tem so 8 botoes; sem isso o Doom andaria devagar.
+
+    config DOOM_ZONE_MB
+        int "Memoria do Doom (zona), em MiB"
+        range 4 7
+        default 6
+        help
+            Fica na PSRAM (8 MB no N16R8). O doomgeneric usa 6 por padrao.
+            O shareware roda com menos; sobra PSRAM para o resto do sistema.
+
+    config DOOM_WAD_PARTITION
+        string "Nome da particao de dados com o WAD"
+        default "wad"
+        help
+            Tipo data, subtipo 0x40 (ver partitions.csv do exemplo).
+            Gravar: python -m esptool ... write_flash <offset> doom1.wad
+            (o README do exemplo tem o comando pronto).
+
+endmenu

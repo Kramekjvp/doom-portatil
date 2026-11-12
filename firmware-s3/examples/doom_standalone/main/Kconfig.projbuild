@@ -1,0 +1,5 @@
+menu "Doom standalone"
+    config DOOM_STANDALONE_TELA_DE_TESTE
+        bool "Mostrar barras R/G/B por 2,5 s antes do Doom"
+        default y
+endmenu

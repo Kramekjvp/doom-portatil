@@ -28,9 +28,11 @@
 
 static const char *TAG = "lcd_i80";
 
-#define LCD_W          240
-#define LCD_H          320
-#define STAGE_PIXELS   2048            /* 4 KB de DMA; faixas de 8+ linhas */
+#define LCD_NATIVE_W   240             /* retrato */
+#define LCD_NATIVE_H   320
+/* 12,8 KB de DMA interno. Em paisagem (320 px/linha) sao faixas de 20 linhas:
+ * ~12 envios por quadro do Doom (com 2048 seriam 40+, cada um com CASET/PASET/RAMWR). */
+#define STAGE_PIXELS   6400
 
 #define ILI_SWRESET    0x01
 #define ILI_SLPOUT     0x11
@@ -42,6 +44,7 @@ static const char *TAG = "lcd_i80";
 #define ILI_MADCTL     0x36
 #define ILI_PIXFMT     0x3A
 
+static int s_w = LCD_NATIVE_W, s_h = LCD_NATIVE_H;   /* dimensoes da orientacao atual */
 static esp_lcd_panel_io_handle_t s_io;
 static SemaphoreHandle_t         s_done;
 static uint16_t                 *s_stage;     /* buffer DMA interno */
@@ -111,15 +114,15 @@ static void send_stage(int x, int y, int w, int h, size_t pixels)
 
 /* ---------------- backend de gfx.h ---------------- */
 
-int gfx_width(void)  { return LCD_W; }
-int gfx_height(void) { return LCD_H; }
+int gfx_width(void)  { return s_w; }
+int gfx_height(void) { return s_h; }
 
 void gfx_fill_rect(int x, int y, int w, int h, uint16_t color)
 {
     if (x < 0) { w += x; x = 0; }
     if (y < 0) { h += y; y = 0; }
-    if (x + w > LCD_W) w = LCD_W - x;
-    if (y + h > LCD_H) h = LCD_H - y;
+    if (x + w > s_w) w = s_w - x;
+    if (y + h > s_h) h = s_h - y;
     if (w <= 0 || h <= 0) return;
 
     int rows = STAGE_PIXELS / w;
@@ -139,7 +142,7 @@ void gfx_blit(int x, int y, int w, int h, const uint16_t *pixels)
 {
     /* recorte: so envia a parte visivel */
     int x0 = x < 0 ? 0 : x, y0 = y < 0 ? 0 : y;
-    int x1 = x + w > LCD_W ? LCD_W : x + w, y1 = y + h > LCD_H ? LCD_H : y + h;
+    int x1 = x + w > s_w ? s_w : x + w, y1 = y + h > s_h ? s_h : y + h;
     int vw = x1 - x0, vh = y1 - y0;
     if (vw <= 0 || vh <= 0) return;
 
@@ -152,6 +155,19 @@ void gfx_blit(int x, int y, int w, int h, const uint16_t *pixels)
         send_stage(x0, yy, vw, r, (size_t)r * (size_t)vw);
         yy += r;
     }
+}
+
+void gfx_set_orientation(gfx_orientation_t o)
+{
+    const bool land = (o == GFX_LANDSCAPE);
+    const uint8_t madctl = (uint8_t)(land ? CONFIG_LCD_I80_MADCTL_LANDSCAPE : CONFIG_LCD_I80_MADCTL);
+    if (cmd(ILI_MADCTL, &madctl, 1) != ESP_OK) {
+        ESP_LOGE(TAG, "falha ao trocar MADCTL (orientacao)");
+        return;
+    }
+    s_w = land ? LCD_NATIVE_H : LCD_NATIVE_W;
+    s_h = land ? LCD_NATIVE_W : LCD_NATIVE_H;
+    gfx_fill_rect(0, 0, s_w, s_h, 0x0000);
 }
 
 /* ---------------- init ---------------- */
@@ -239,7 +255,7 @@ esp_err_t lcd_i80_init(void)
     vTaskDelay(pdMS_TO_TICKS(120));
     ESP_RETURN_ON_ERROR(cmd(ILI_DISPON, NULL, 0), TAG, "DISPON");
 
-    gfx_fill_rect(0, 0, LCD_W, LCD_H, 0x0000);
+    gfx_fill_rect(0, 0, s_w, s_h, 0x0000);
     ESP_LOGI(TAG, "ILI9341 i80 8 bits pronto (%d Hz)", CONFIG_LCD_I80_PCLK_HZ);
     return ESP_OK;
 }

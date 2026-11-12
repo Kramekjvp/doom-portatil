@@ -84,6 +84,15 @@ menu "LCD i80 (ILI9341 paralelo 8 bits)"
             Se a imagem sair espelhada, tente 0x08, 0x88 ou 0xC8.
             Se vermelho e azul estiverem trocados, alterne o bit 0x08.
 
+    config LCD_I80_MADCTL_LANDSCAPE
+        hex "MADCTL em paisagem (Doom, 320x240)"
+        default 0x28
+        help
+            0x28 = paisagem BGR (TFT_eSPI rotacao 1; par do 0x48 do retrato).
+            Se a imagem sair de cabeca para baixo, tente 0xE8.
+            Se sair espelhada, tente 0x68 ou 0xA8.
+            Se vermelho e azul estiverem trocados, alterne o bit 0x08 (como no retrato).
+
     config LCD_I80_INVERT
         bool "Inverter cores (comando INVON)"
         default n

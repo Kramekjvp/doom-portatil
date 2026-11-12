@@ -16,7 +16,9 @@ tetris_standalone (main)  ──►  tetris_game  ──►  tetris_core   (regr
 | `game_api`    | Contratos: `game_ops_t` (jogo), `input.h` (botoes), `gfx.h` (tela) + fonte 5x7 |
 | `tetris_core` | Regras do Tetris. **Autoria: dupla do projeto.** Unica mudanca: chute vertical no giro |
 | `tetris_game` | Menu, partida, pausa e fim de jogo; implementa `game_ops_t`            |
-| `lcd_i80`     | Driver ILI9341 (esp_lcd i80 + DMA); implementa o backend de `gfx.h`    |
+| `launcher`    | Menu de jogos (é um `game_ops_t`); recebe a lista de quem monta o firmware; ADR-0011 |
+| `doom_game`   | Doom (doomgeneric em `third_party/`) como `game_ops_t`; ADR-0010        |
+| `lcd_i80`     | Driver ILI9341 (esp_lcd i80 + DMA); implementa o backend de `gfx.h`; retrato e paisagem |
 | `input_gpio`  | Botoes em GPIO direto (bancada). Trocavel por MCP23017 sem mexer nos jogos |
 
 ## Pinos padrao (mude em `idf.py menuconfig`)
@@ -78,3 +80,17 @@ imagem espelhada, ajuste `LCD_I80_MADCTL` / `LCD_I80_INVERT` no menuconfig.
 - `CMakeLists.txt`, `partitions.csv` e `sdkconfig.defaults` na raiz de `firmware-s3/`
   estão vazios (reservados para o projeto principal com Doom). O Tetris compila pelo
   projeto em `examples/tetris_standalone/`.
+
+## Doom e simulador no PC
+
+- `components/doom_game` + `examples/doom_standalone` (placa) e `sim/` (PC): ver
+  `../docs/adr/0010-doom-no-s3-e-simulador-no-pc.md`, `examples/doom_standalone/README.md` e
+  `sim/README.md`.
+- `gfx.h` ganhou `gfx_set_orientation()` (retrato 240×320 / paisagem 320×240); o Doom usa paisagem.
+- Estado: validado no simulador; **não compilado com o ESP-IDF nem testado na placa**.
+
+## Firmware único (launcher)
+
+- `app/` é o firmware do console (launcher + Tetris + Doom); `examples/` ficam para depurar cada jogo.
+  Ver `app/README.md` e `../docs/adr/0011-launcher-e-firmware-unico.md`.
+- Estado: validado no simulador e no `host_test`; **não compilado com o ESP-IDF**.

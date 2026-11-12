@@ -16,8 +16,14 @@ extern "C" {
     ((uint16_t)((((r) & 0xF8) << 8) | (((g) & 0xFC) << 3) | (((b) & 0xFF) >> 3)))
 
 /* ---- backend ---- */
-int  gfx_width(void);
-int  gfx_height(void);
+typedef enum { GFX_PORTRAIT = 0, GFX_LANDSCAPE = 1 } gfx_orientation_t;
+
+int  gfx_width(void);     /* depende da orientacao: 240 (retrato) ou 320 (paisagem) */
+int  gfx_height(void);    /* depende da orientacao: 320 (retrato) ou 240 (paisagem) */
+/* Troca a orientacao da tela (retrato e o padrao ao ligar). O conteudo anterior
+ * fica indefinido: o backend limpa para preto e o jogo redesenha tudo.
+ * Quem muda a orientacao (o jogo, no init()) tambem a devolve a GFX_PORTRAIT no deinit(). */
+void gfx_set_orientation(gfx_orientation_t o);
 void gfx_fill_rect(int x, int y, int w, int h, uint16_t color);
 void gfx_blit(int x, int y, int w, int h, const uint16_t *pixels);  /* w*h pixels, linha a linha */
 
