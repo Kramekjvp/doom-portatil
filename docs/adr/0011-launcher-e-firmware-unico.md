@@ -1,8 +1,12 @@
 # ADR-0011: Launcher e firmware único
 
 ## Status
-Proposta. Numeração: segue a ADR-0010 (ver a observação sobre 0008/0009 nela).
+Proposta — validada no simulador e no host_test; falta compilar para a placa.
 Concretiza o item "launcher" da ADR-0005.
+
+Atualização 2026-11-12 (reorganização do repositório): `app/` virou a raiz de
+`firmware/`, `examples/` foi removido e a lista de jogos passou para o componente
+`game_registry`. Ver `docs/historico.md`.
 
 ## Contexto
 Tetris e Doom já existem como jogos (`game_ops_t`), cada um com seu projeto de teste em

@@ -1,7 +1,11 @@
 # ADR-0003: Protocolo serial ESP32-C3 → ESP32-S3
 
 ## Status
-Aceita. Terminologia atualizada após a ADR-0006 — o "Pi" das versões
+Superada pela ADR-0012 (2026-11-12): sem o ESP32-C3 não há protocolo serial entre
+chips. Mantida como histórico; nenhum código a usa (o `protocol.py` de referência
+só existe na tag `pre-reorganizacao`).
+
+Texto anterior: terminologia atualizada após a ADR-0006 — o "Pi" das versões
 anteriores desta ADR é o ESP32-S3; o "MCU" é o ESP32-C3. O formato da
 mensagem não muda.
 

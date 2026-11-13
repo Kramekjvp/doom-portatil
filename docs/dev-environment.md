@@ -1,49 +1,35 @@
 # Ambiente de desenvolvimento
 
-Atualizado após a ADR-0006 — não há mais um alvo Linux (Raspberry Pi) no
-caminho de produção. Os dois firmwares são bare-metal/FreeRTOS via
-ESP-IDF.
+Atualizado em 2026-11-12 (ADR-0012: ESP32-S3 único). Não há mais alvo Linux nem segundo chip.
 
-## firmware-s3/ (ESP32-S3 — jogos)
+## Firmware (`firmware/`) — ESP32-S3 N16R8
 
-- ESP-IDF (toolchain oficial da Espressif) ou PlatformIO com
-  `platform = espressif32`, `board` apontando pro módulo N16R8
-  (configurar 16MB flash / 8MB PSRAM octal no `menuconfig`/`platformio.ini`).
-- Biblioteca de driver de display bare-metal para o painel SPI escolhido
-  (ex.: LovyanGFX ou equivalente compatível com ESP-IDF) — ver ADR-0004.
-- doomgeneric vendorizado como submódulo, com um backend de renderização
-  novo escrito para esse driver (ver ADR-0002).
-- Cabo USB-serial (ou USB nativo, a placa N16R8 costuma trazer) pra
-  flashar e depurar.
+- **ESP-IDF 6.0.3** no Windows, usado pelo "terminal do ESP-IDF" (`idf.py`).
+- Placa N16R8: 16 MB de flash e 8 MB de PSRAM octal (já configurados em
+  `firmware/sdkconfig.defaults`).
+- Cabo USB para gravar e ver o log.
+- doomgeneric como submódulo em `third_party/doomgeneric`:
+  `git submodule update --init --recursive`.
 
-## firmware-c3/ (ESP32-C3 — I/O)
+## Testes e simulador no PC
 
-- Mesma toolchain (ESP-IDF/PlatformIO), alvo `esp32c3`.
-- ADC interno do C3 pra leitura de tensão da bateria — conferir na
-  documentação atual da Espressif se a calibração de fábrica é confiável
-  pra esse uso ou se precisa de calibração manual.
-- UART pra conversar com o ESP32-S3 seguindo o protocolo (ADR-0003).
+Compilam os mesmos fontes da placa, sem hardware (RNF03).
 
-## tools/ (referência de protocolo, não roda em produção)
+- **MSYS2, terminal UCRT64:**
+  `pacman -S mingw-w64-ucrt-x86_64-gcc make mingw-w64-ucrt-x86_64-SDL2`
+- `firmware/host_test/`: testes de entrada, regras do Tetris, launcher e fluxo do jogo.
+- `firmware/sim/`: simulador com janela (SDL2) ou `make headless` (sem SDL2).
+- Comandos: `firmware/README.md` e `firmware/sim/README.md`.
 
-Continua útil como ambiente de teste da lógica do protocolo antes de
-portar pra C, sem precisar de nenhum dos dois chips:
+## Git e scripts
 
-```bash
-cd tools/tests && python3 test_protocol.py
-```
+- **Git Bash** (vem com o Git for Windows) para scripts `.sh` como `tools/preparar_wad.sh`.
+- Fins de linha: o repositório guarda LF (`.gitattributes`); não converta para CRLF.
+- Commits: `tipo: descrição curta` (`feat`, `fix`, `docs`, `chore`, `test`).
+- `build/`, `sdkconfig`, `managed_components/`, `*.wad` e ROMs **não** vão para o git.
 
-## O que fica obsoleto
+## O que ficou obsoleto
 
-- `socat` + par de portas seriais virtuais + `uinput` — eram específicos
-  do modelo antigo (daemon Linux injetando teclado num processo SDL).
-  Sem Linux no caminho de produção, não se aplicam mais. Testar a
-  comunicação real agora significa ligar os dois ESP32 fisicamente (ou
-  simular um lado com um terceiro dispositivo serial/USB).
-- SDL2/`libsdl2-dev` como *caminho de produção* — continua útil só como
-  ambiente de teste rápido da lógica do jogo antes de portar pro backend
-  bare-metal.
-
-## Convenção de commits
-
-`tipo: descrição curta` (`feat`, `fix`, `docs`, `chore`, `test`).
+- `socat`, portas seriais virtuais, `uinput` e o daemon Python: eram do modelo Raspberry
+  Pi + Linux (ver `docs/historico.md`).
+- Toolchain do ESP32-C3, PlatformIO e driver de tela SPI: não fazem parte do projeto atual.

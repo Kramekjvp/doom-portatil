@@ -1,7 +1,8 @@
 # ADR-0005: Suporte a múltiplos jogos (extensão em camadas, pós-Doom)
 
 ## Status
-Proposta — revisada após a ADR-0006 (arquitetura ESP32-S3 + ESP32-C3).
+Proposta — revisada após a ADR-0006 (arquitetura ESP32-S3 + ESP32-C3; desde a
+ADR-0012, S3 único). O launcher foi concretizado na ADR-0011.
 A estrutura básica (launcher + abstração de input) entra cedo, junto do
 Doom; o conteúdo dos jogos adicionais é condicional ao tempo disponível.
 

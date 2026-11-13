@@ -1,7 +1,10 @@
 # ADR-0002: doomgeneric como source port
 
 ## Status
-Aceita. Consequências revisadas após a ADR-0006 (o alvo de execução
+Aceita. Atualização de 2026-11-12: o alvo é o ESP32-S3 único (ADR-0012) e a tela
+é paralela i80, não SPI (ADR-0008).
+
+Consequências revisadas após a ADR-0006 (o alvo de execução
 deixou de ser Linux/Raspberry Pi e passou a ser bare-metal no ESP32-S3).
 
 ## Contexto

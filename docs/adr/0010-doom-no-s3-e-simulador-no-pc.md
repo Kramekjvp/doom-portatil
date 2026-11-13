@@ -1,9 +1,10 @@
 # ADR-0010: Doom no ESP32-S3 (doomgeneric) e simulador no PC
 
 ## Status
-Proposta. Numeração: as ADRs 0008 (tela paralela) e 0009 (camada de jogos) são
-citadas no `CLAUDE.md`, mas não estavam na cópia do repositório usada para
-escrever esta; renumere se 0010 já estiver ocupada.
+Proposta — validada no simulador do PC; falta compilar para a placa e medir.
+
+Atualização 2026-11-12: caminhos citados abaixo (`firmware-s3/`, `examples/`,
+`app/`) são do layout anterior; ver o mapa em `docs/historico.md`.
 
 ## Contexto
 O Tetris já roda no ESP32-S3 pelas camadas do `firmware-s3` (ADR-0009): jogos só
