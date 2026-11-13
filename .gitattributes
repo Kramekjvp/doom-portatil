@@ -1,0 +1,6 @@
+# Fins de linha: o repositorio guarda LF; no Windows o git nao converte para CRLF.
+* text=auto eol=lf
+*.sh text eol=lf
+*.png binary
+*.ppm binary
+*.wad binary

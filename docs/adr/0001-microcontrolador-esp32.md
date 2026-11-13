@@ -1,7 +1,10 @@
 # ADR-0001: Uso do ESP32 como microcontrolador
 
 ## Status
-Superada pela ADR-0006. A escolha de usar um ESP32 para o papel de I/O
+Superada pela ADR-0006 e, desde 2026-11-12, também pela ADR-0012 (só o
+ESP32-S3 permanece no projeto).
+
+Nota (ADR-0006): a escolha de usar um ESP32 para o papel de I/O
 se mantém — a ADR-0006 apenas passa a nomear o chip especificamente
 (ESP32-C3) e adiciona um segundo ESP32 (S3) para o papel que antes era
 da Raspberry Pi.

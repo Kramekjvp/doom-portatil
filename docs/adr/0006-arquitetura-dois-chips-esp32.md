@@ -1,7 +1,8 @@
 # ADR-0006: Arquitetura de dois chips ESP32-S3 + ESP32-C3 (substitui a Raspberry Pi)
 
 ## Status
-Aceita — substitui ADR-0001.
+Superada pela ADR-0012 (2026-11-12) quanto ao ESP32-C3: o console passou a ter só o
+ESP32-S3. A parte "sem Raspberry Pi" continua válida. Substituiu a ADR-0001.
 
 ## Contexto
 A Raspberry Pi Zero 2 W, prevista originalmente pra rodar o motor do jogo,
