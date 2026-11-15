@@ -17,12 +17,17 @@ podem ser o LED RGB, conforme a placa.
 | LCD_D2 | 6 | LCD_CS | 10 |
 | LCD_D3 | 7 | LCD_RST | 14 |
 | LCD_D4 | 15 | LCD_RD | 21 (fica em nível alto; `-1` = ligar em 3V3) |
-| LCD_D5 | 16 | Clock | 10 MHz |
+| LCD_D5 | **12** (o padrão do código ainda é 16) | Clock | 10 MHz |
 | LCD_D6 | 17 | MADCTL retrato / paisagem | 0x48 / 0x28 |
 | LCD_D7 | 18 | | |
 
 A ordem D0..D7 é livre (o LCD_CAM roteia qualquer GPIO), mas cada Dn do chip tem de ir ao
 Dn do shield.
+
+**LCD_D5 no GPIO 12:** o GPIO 16 desta placa não sobe a nível alto (0 V na ponta do fio, mesmo
+sem o shield). O D5 foi movido para o GPIO 12 na fiação e no programa `tools/lcd_teste_gpio`.
+**Pendente:** `LCD_I80_PIN_D5` no `components/lcd_i80/Kconfig` ainda diz 16; ajuste no `menuconfig`
+ou mude o padrão.
 
 ## Botões em GPIO direto (`input_gpio`, bancada)
 
@@ -37,12 +42,38 @@ CIMA e SELECT vêm **desligados** por padrão. No Doom, CIMA é andar para a fre
 sai do Tetris e faz strafe/troca de arma no Doom. Para testar na placa é preciso atribuir
 um GPIO a eles no `menuconfig` (ou esperar o MCP23017).
 
-## Pendências (nada abaixo foi verificado)
+## Shield paralelo: o que a bancada mostrou (2026-11-14, ver `docs/bancada.md`)
 
-- **5 V:** a placa do S3 foi soldada para fornecer 5 V; nada foi testado depois.
-- **Nível lógico:** o shield tem dois buffers tipo 245 e um regulador (ADR-0008), e os GPIOs
-  do S3 são 3,3 V. Alimentação e nível lógico ainda em diagnóstico: confira antes de culpar o código.
-- **MCP23017:** pinos I²C (SDA, SCL) e endereço no S3 a definir.
-- **microSD:** o slot do shield compartilha pinos com a tela paralela; não foi checado. O
-  cartão ainda não foi comprado.
+- Alimentação por **5V e GND** funciona (backlight acende, regulador U1 em 3,3 V). O pino **3.3V** do
+  J4 é **entrada** e mede 0 V com o jumper J1 aberto: não ligue o 3V3 da placa nele; deixe o J1 aberto.
+- **RD controla o sentido dos buffers de dados.** Com RD alto o ESP32 escreve; com RD baixo o buffer
+  devolve dados e, se o ESP32 estiver dirigindo o mesmo fio, a tensão cai a ~1,5 V. Mantenha o RD
+  **alto** em qualquer teste de escrita.
+- Os 13 sinais chegam aos pinos do shield com o nível certo (D5 já no GPIO 12), mas **o painel não
+  responde**: leitura de ID constante e tela sempre branca. O shield é o principal suspeito.
+- Detalhes dos testes e do que não foi provado: `docs/bancada.md`.
+
+## Alternativa: módulo SPI ILI9341 2,8" (ADR-0013, proposta; não comprado)
+
+| Pino do módulo | Liga em | Observação |
+|---|---|---|
+| VCC | 5V da placa | J1 do módulo aberto (o regulador do módulo gera 3,3 V); confirmar no anúncio |
+| GND | GND | |
+| CS | GPIO 10 | pino nativo do SPI2 |
+| SDI (MOSI) | GPIO 11 | pino nativo do SPI2 |
+| SCK | GPIO 12 | pino nativo do SPI2 |
+| DC | GPIO 9 | |
+| RESET | GPIO 14 | |
+| LED (backlight) | 3V3 | |
+| SDO (MISO), T_* (touch), SD_* | não usados | |
+
+Com a tela SPI, os GPIOs 4–8, 15–18 e 21 ficam livres (os botões em GPIO direto cabem sem o MCP23017).
+
+## Pendências
+
+- **5 V:** a placa do S3 entrega 4,68 V no pino de 5 V (medido em 14/11); suficiente para o shield.
+- **Cabo flexível do shield paralelo:** conferência visual ainda não feita.
+- **MCP23017:** pinos I²C (SDA, SCL) e endereço no S3 a definir (ou dispensar, ver `docs/tasks.md`).
+- **microSD:** o slot do shield paralelo compartilha pinos com a tela; o módulo SPI traz o próprio
+  slot. O cartão ainda não foi comprado.
 - **Áudio (I²S):** costuma conflitar com pinos da tela em projetos parecidos; só entra por último.
