@@ -13,15 +13,18 @@ condicional) — projeto da disciplina de Sistemas Embarcados. Apresentação: *
 | Software | ESP-IDF 6.0.3 + FreeRTOS; Doom via doomgeneric |
 | Ambiente | Windows, Git/GitHub (`docs/dev-environment.md`) |
 
-## Onde estamos (2026-11-12)
+## Onde estamos (2026-11-14)
 
 Detalhe e níveis de prova: [`docs/tasks.md`](docs/tasks.md).
 
 - **No PC (simulador e testes):** Tetris, launcher (menu) e Doom funcionam.
-- **Compilado, nunca na placa:** driver da tela, entrada e Tetris (ESP-IDF, 17/10).
-- **Nunca compilado:** launcher, firmware único e Doom para a placa.
-- **Placa do S3** soldada para fornecer 5 V; **nada testado** ainda.
-- **Sem decisão:** bateria (RF04) e desligamento seguro (RF05); pinos do MCP23017; microSD.
+- **Na placa:** o firmware único **sem o Doom** compila, grava e roda até o launcher (log serial).
+- **Tela:** o shield paralelo não mostra imagem: fiação, alimentação e sinais chegam a ele, mas o
+  painel não responde. Diagnóstico completo em [`docs/bancada.md`](docs/bancada.md); contingência
+  com módulo SPI na [ADR-0013](docs/adr/0013-tela-spi-de-contingencia.md).
+- **Doom na placa:** o link estoura a DRAM em 31.728 bytes (a corrigir).
+- **GPIO 16 da placa não sobe:** LCD_D5 usa o GPIO 12 (`hardware/pinos.md`).
+- **Sem decisão:** bateria (RF04) e desligamento seguro (RF05); botões por MCP23017 ou GPIO direto; microSD.
 
 ## Mapa do repositório
 
@@ -55,6 +58,7 @@ Build e gravação na placa, simulador, pinos e riscos da primeira compilação:
 
 - [`docs/tasks.md`](docs/tasks.md) — quadro de tarefas (**fonte de verdade** do que está feito)
 - [`docs/requirements.md`](docs/requirements.md) — requisitos formais
+- [`docs/bancada.md`](docs/bancada.md) — diário de bancada: o diagnóstico da tela, passo a passo
 - [`docs/adr/`](docs/adr/README.md) — decisões de arquitetura (índice e situação de cada uma)
 - [`docs/historico.md`](docs/historico.md) — as arquiteturas anteriores e o mapa de caminhos antigos → novos
 - [`docs/dev-environment.md`](docs/dev-environment.md) — ambiente de desenvolvimento

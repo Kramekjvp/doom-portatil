@@ -25,12 +25,17 @@
 
 static const char *TAG = "lcd_teste";
 
-static const int PIN_D[8] = { 4, 5, 6, 7, 15, 16, 17, 18 };   /* LCD_D0 .. LCD_D7 */
+/* ATENCAO: o LCD_D5 foi para o GPIO 12 (o GPIO 16 desta placa nao subia a nivel alto) */
+static const int PIN_D[8] = { 4, 5, 6, 7, 15, 12, 17, 18 };   /* LCD_D0 .. LCD_D7 */
 #define PIN_WR   8
 #define PIN_RS   9
 #define PIN_CS   10
 #define PIN_RST  14
 #define PIN_RD   21    /* neste teste o RD tem de estar no GPIO 21 para ler o ID */
+
+/* 0 = confere o LCD_D5 por 15 s, le o ID do controlador e desenha cores (teste principal).
+ * 1 = "caminhada de pinos": um pino por vez para medir com o multimetro (nao desenha nada). */
+#define MODO_CAMINHADA 0
 
 #define ATRASO_US  1   /* meio periodo do WR (us); 0 = o mais rapido que o GPIO simples faz */
 #define LARGURA    240
@@ -179,9 +184,69 @@ static void preenche(uint16_t cor)
     gpio_set_level((gpio_num_t)PIN_CS, 1);
 }
 
+/* ---- caminhada de pinos ----
+ * Repouso: RD, WR, CS, RS, RST em nivel ALTO e D0..D7 em baixo (como numa escrita normal).
+ * RD fica ALTO o tempo todo, exceto no passo 2 (de proposito, para comparar).
+ * Passo 1: cada D0..D7 fica ALTO sozinho por 10 s            -> esperado ~3,3 V no pino.
+ * Passo 2: RD BAIXO + D0 ALTO por 10 s (so informativo)       -> mostra se o RD muda o sentido dos buffers.
+ * Passo 3: WR, RS, CS, RST ficam BAIXOS um por vez por 10 s   -> esperado ~0 V no pino (os outros ~3,3 V).
+ */
+static void caminhada(void)
+{
+    static const struct { const char *nome; int pin; } D[8] = {
+        { "LCD_D0", 4 },  { "LCD_D1", 5 },  { "LCD_D2", 6 },  { "LCD_D3", 7 },
+        { "LCD_D4", 15 }, { "LCD_D5", 12 }, { "LCD_D6", 17 }, { "LCD_D7", 18 },
+    };
+    static const struct { const char *nome; int pin; } C[4] = {
+        { "LCD_WR", 8 }, { "LCD_RS", 9 }, { "LCD_CS", 10 }, { "LCD_RST", 14 },
+    };
+    ESP_LOGI(TAG, "CAMINHADA DE PINOS (v2): repouso = RD/WR/CS/RS/RST altos, D0..D7 baixos");
+    for (;;) {
+        for (int i = 0; i < 8; i++) gpio_set_level((gpio_num_t)D[i].pin, 0);
+        for (int i = 0; i < 4; i++) gpio_set_level((gpio_num_t)C[i].pin, 1);
+        gpio_set_level((gpio_num_t)PIN_RD, 1);
+        ESP_LOGI(TAG, "RD esta ALTO o tempo todo (exceto no passo 2): meca no pino LCD_RD agora (esperado ~3,3 V)");
+        vTaskDelay(pdMS_TO_TICKS(5000));
+
+        for (int i = 0; i < 8; i++) {
+            gpio_set_level((gpio_num_t)D[i].pin, 1);
+            ESP_LOGI(TAG, "PASSO 1 - ALTO agora: %s (GPIO %d); esperado ~3,3 V", D[i].nome, D[i].pin);
+            vTaskDelay(pdMS_TO_TICKS(10000));
+            gpio_set_level((gpio_num_t)D[i].pin, 0);
+        }
+
+        gpio_set_level((gpio_num_t)PIN_RD, 0);
+        gpio_set_level((gpio_num_t)D[0].pin, 1);
+        ESP_LOGI(TAG, "PASSO 2 - RD BAIXO + LCD_D0 ALTO: meca no pino LCD_D0 (so informativo)");
+        vTaskDelay(pdMS_TO_TICKS(10000));
+        gpio_set_level((gpio_num_t)D[0].pin, 0);
+        gpio_set_level((gpio_num_t)PIN_RD, 1);
+
+        for (int i = 0; i < 4; i++) {
+            gpio_set_level((gpio_num_t)C[i].pin, 0);
+            ESP_LOGI(TAG, "PASSO 3 - BAIXO agora: %s (GPIO %d); esperado ~0 V", C[i].nome, C[i].pin);
+            vTaskDelay(pdMS_TO_TICKS(10000));
+            gpio_set_level((gpio_num_t)C[i].pin, 1);
+        }
+        ESP_LOGI(TAG, "ciclo completo; recomecando em 5 s");
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
+/* Segura so o LCD_D5 (GPIO 12) em nivel alto por 15 s para voce medir no pino do shield. */
+static void confere_d5(void)
+{
+    for (int i = 0; i < 8; i++) gpio_set_level((gpio_num_t)PIN_D[i], 0);
+    gpio_set_level((gpio_num_t)PIN_RD, 1);
+    gpio_set_level((gpio_num_t)PIN_D[5], 1);
+    ESP_LOGI(TAG, "MECA AGORA o pino LCD_D5 do shield (GPIO %d alto): esperado ~3,3 V. Aguardando 15 s...", PIN_D[5]);
+    vTaskDelay(pdMS_TO_TICKS(15000));
+    gpio_set_level((gpio_num_t)PIN_D[5], 0);
+}
+
 void app_main(void)
 {
-    ESP_LOGI(TAG, "pinos: D0..D7 = 4,5,6,7,15,16,17,18 | WR=%d RS=%d CS=%d RST=%d RD=%d",
+    ESP_LOGI(TAG, "pinos: D0..D7 = 4,5,6,7,15,12,17,18 | WR=%d RS=%d CS=%d RST=%d RD=%d",
              PIN_WR, PIN_RS, PIN_CS, PIN_RST, PIN_RD);
 
     for (int i = 0; i < 8; i++) saida(PIN_D[i], 0);
@@ -190,6 +255,9 @@ void app_main(void)
     saida(PIN_CS, 1);
     saida(PIN_RST, 1);
     saida(PIN_RD, 1);
+
+    if (MODO_CAMINHADA) caminhada();         /* nao retorna */
+    confere_d5();
 
     inicializa_tela();
     ESP_LOGI(TAG, "init enviado; vou preencher a tela com cores (cada uma leva cerca de 1 s)");

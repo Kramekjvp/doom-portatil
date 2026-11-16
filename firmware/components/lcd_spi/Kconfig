@@ -1,0 +1,68 @@
+menu "LCD SPI (ILI9341 modulo 2,8 pol)"
+
+    comment "Pinos PROPOSTOS: CS/MOSI/SCK sao os pinos nativos do SPI2 (FSPI) do ESP32-S3 e aguentam velocidades altas."
+    comment "Evite 0,3,19,20 (strapping/USB), 26-37 (flash/PSRAM octal), 43,44 (UART0), 45,46."
+
+    config LCD_SPI_PIN_CS
+        int "GPIO de CS"
+        range 0 48
+        default 10
+
+    config LCD_SPI_PIN_MOSI
+        int "GPIO de SDI (MOSI)"
+        range 0 48
+        default 11
+
+    config LCD_SPI_PIN_SCLK
+        int "GPIO de SCK"
+        range 0 48
+        default 12
+
+    config LCD_SPI_PIN_DC
+        int "GPIO de DC (dado/comando)"
+        range 0 48
+        default 9
+
+    config LCD_SPI_PIN_RST
+        int "GPIO de RESET (-1 = ligado ao reset da placa)"
+        range -1 48
+        default 14
+
+    config LCD_SPI_PIN_BL
+        int "GPIO do backlight / pino LED (-1 = ligado direto em 3V3)"
+        range -1 48
+        default -1
+
+    config LCD_SPI_CLK_HZ
+        int "Clock do SPI (Hz)"
+        range 1000000 80000000
+        default 20000000
+        help
+            Comece em 20 MHz (jumpers longos ou protoboard); se a imagem estiver
+            estavel, suba para 40 MHz. Teto de quadros por segundo com o quadro
+            inteiro (~154 KB): ~16 fps a 20 MHz, ~32 fps a 40 MHz, ~64 fps a 80 MHz.
+
+    config LCD_SPI_MADCTL
+        hex "Registrador MADCTL (orientacao e ordem de cor)"
+        default 0x48
+        help
+            0x48 = retrato, BGR (padrao do TFT_eSPI, rotacao 0).
+            Se a imagem sair espelhada, tente 0x08, 0x88 ou 0xC8.
+            Se vermelho e azul estiverem trocados, alterne o bit 0x08.
+
+    config LCD_SPI_MADCTL_LANDSCAPE
+        hex "MADCTL em paisagem (Doom, 320x240)"
+        default 0x28
+        help
+            0x28 = paisagem BGR (TFT_eSPI rotacao 1; par do 0x48 do retrato).
+            Se a imagem sair de cabeca para baixo, tente 0xE8.
+            Se sair espelhada, tente 0x68 ou 0xA8.
+
+    config LCD_SPI_INVERT
+        bool "Inverter cores (comando INVON)"
+        default n
+        help
+            Alguns paineis precisam de INVON para cores corretas.
+            Se tudo sair com cores invertidas (branco no lugar de preto), ligue esta opcao.
+
+endmenu

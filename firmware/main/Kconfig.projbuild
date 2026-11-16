@@ -1,4 +1,19 @@
 menu "Portatil (firmware unico)"
+
+    choice PORTATIL_TELA
+        prompt "Tela do console"
+        default PORTATIL_TELA_SPI
+        help
+            Escolhe qual driver define as funcoes de desenho (gfx_*). So um dos dois
+            existe no firmware. Mudou a escolha? Rode idf.py reconfigure e compile de novo.
+
+        config PORTATIL_TELA_SPI
+            bool "Modulo ILI9341 SPI 2,8 pol (ADR-0013)"
+
+        config PORTATIL_TELA_I80
+            bool "Shield ILI9341 paralelo 8 bits (ADR-0008)"
+    endchoice
+
     config PORTATIL_TELA_DE_TESTE
         bool "Mostrar barras R/G/B por 2,5 s ao ligar (confere fiacao, cor e orientacao)"
         default y

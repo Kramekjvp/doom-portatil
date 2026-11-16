@@ -45,8 +45,11 @@ python -m esptool --chip esp32s3 -p COMx write_flash 0x310000 ..\wad\doom1.wad
 idf.py monitor
 ```
 
-- **Primeira compilação, sem o Doom** (menu + Tetris): `idf.py -DPORTATIL_SEM_DOOM=1 build`.
-  Para voltar ao normal: `-DPORTATIL_SEM_DOOM=0`. (Esta flag não foi testada no ESP-IDF.)
+- **Build sem o Doom** (menu + Tetris), por **variável de ambiente** (a flag `-D` não funciona, o
+  ESP-IDF lê os `REQUIRES` antes das variáveis do CMake):
+  PowerShell `$env:PORTATIL_SEM_DOOM = "1"`, depois `idf.py reconfigure` e `idf.py build`.
+  Para voltar ao normal: `$env:PORTATIL_SEM_DOOM = "0"` e `idf.py reconfigure`. Compilou, gravou e
+  rodou até o launcher em 13/11.
 - Doom: `git submodule update --init --recursive` e `sh tools/preparar_wad.sh CAMINHO/doom1.wad`
   (valida o WAD e o copia para `wad/doom1.wad`). O WAD **não** vai para o git.
   O `doom1.wad` usado nos testes (4.196.020 bytes) é detectado pelo motor como v1.8: roda,
@@ -68,11 +71,15 @@ idf.py monitor
 - Tela em paisagem; imagem de cabeça para baixo ou espelhada → `LCD_I80_MADCTL_LANDSCAPE`
   (0x28 → 0xE8, 0x68 ou 0xA8).
 
-## Riscos conhecidos da primeira compilação do Doom (nada disto foi verificado)
+## Problemas conhecidos do Doom na placa
 
-- **DRAM insuficiente no link** (`region dram0_0_seg overflowed`): as tabelas estáticas do Doom
-  (`.bss`) são grandes. Veja `idf.py size-components`; saída usual: habilitar
-  `CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY` e marcar os maiores arrays com `EXT_RAM_BSS_ATTR`.
+- **DRAM insuficiente no link — CONFIRMADO em 13/11:** `region dram0_0_seg overflowed by 31728 bytes`
+  com o Doom no link. As tabelas estáticas do Doom (`.bss`) são grandes. Veja `idf.py size-components`;
+  saída usual: habilitar `CONFIG_SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY` e marcar os maiores arrays com
+  `EXT_RAM_BSS_ATTR`. **Ainda não corrigido.**
+
+Riscos abaixo ainda **não verificados**:
+
 - **Símbolos de libc ausentes** (`system`, `mkdir` em `i_system.c`/`m_misc.c`): são rotas de
   erro/config do Doom; um stub de duas linhas resolve.
 - **Nomes de `CONFIG_*` do `sdkconfig.defaults`** (cache de dados 64 KB / linha 64 B) podem ter
@@ -80,6 +87,12 @@ idf.py monitor
   `sdkconfig.defaults` só vale enquanto não existe um `sdkconfig` gerado (apague-o para reaplicar).
 - **Desempenho:** sem medida. Em Options do Doom há "Low detail". Barramento: ~150 KB/quadro →
   teto de ~65 quadros/s a 10 MHz.
+
+## Diagnóstico da tela na bancada
+
+`tools/lcd_teste_gpio/` é um projeto ESP-IDF separado que mexe nos pinos da tela com GPIO simples
+(sem `lcd_i80`): lê o ID do controlador, desenha cores ou caminha pelos pinos para medir com
+multímetro. Pinos fixos no código (D5 = GPIO 12). Resultados: `docs/bancada.md`.
 
 ## Testes e simulador no PC (sem hardware)
 
@@ -97,12 +110,13 @@ make test-headless WAD=../../wad/doom1.wad       # sem janela: roda Tetris, laun
 Teclado, roteiros e capturas: `sim/README.md`. As capturas do `host_test` saem em
 `host_test/shots/` (`exemplo_telas.png` mostra o resultado).
 
-## Estado da verificação (2026-11-12)
+## Estado da verificação (2026-11-14)
 
 | O quê | Nível (ver `docs/tasks.md`) |
 |---|---|
 | Regras, fluxo e desenho do Tetris; entrada; launcher | PC |
 | Doom e launcher → Doom, com WAD real | PC (simulador) |
-| `lcd_i80`, `input_gpio`, `game_api`, Tetris | compila (ESP-IDF 6.0.3, 17/10; recompilar) |
-| `game_registry`, `launcher`, `doom_game`, `main/` | **nunca compilados** |
-| Qualquer coisa na placa, além do `hello_world` | **nada** |
+| `lcd_i80`, `input_gpio`, `game_api`, Tetris | compila (ESP-IDF 6.0.3) |
+| `game_registry`, `launcher`, `main/` (sem o Doom) | **placa**: compilam, gravam e rodam até o launcher (log); sem imagem |
+| `doom_game` | objetos compilam; **o link estoura a DRAM** (31.728 bytes) |
+| Tela paralela do shield | **placa**: não mostra imagem; o painel não responde (`docs/bancada.md`) |

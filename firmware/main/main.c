@@ -1,5 +1,5 @@
 /*
- * Firmware unico do console: lcd_i80 + input_gpio + launcher + jogos.
+ * Firmware unico do console: tela (lcd_spi ou lcd_i80) + input_gpio + launcher + jogos.
  * Faz o papel de "dono do laco de quadros" (no PC, quem faz isso e o sim/sim_main.c).
  * A lista de jogos vem do componente game_registry: a MESMA na placa e no simulador.
  *
@@ -17,7 +17,13 @@
 #include "gfx.h"
 #include "input.h"
 #include "input_gpio.h"
+#if CONFIG_PORTATIL_TELA_SPI
+#include "lcd_spi.h"
+#define TELA_INICIAR() lcd_spi_init()
+#else
 #include "lcd_i80.h"
+#define TELA_INICIAR() lcd_i80_init()
+#endif
 #include "launcher.h"
 #include "game_registry.h"
 
@@ -58,7 +64,7 @@ static void roda_jogo(const game_ops_t *g)
 static void tarefa_jogo(void *arg)
 {
     (void)arg;
-    ESP_ERROR_CHECK(lcd_i80_init());
+    ESP_ERROR_CHECK(TELA_INICIAR());
     ESP_ERROR_CHECK(input_gpio_init());
 
 #if CONFIG_PORTATIL_TELA_DE_TESTE
