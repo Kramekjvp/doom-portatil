@@ -11,8 +11,13 @@
  *  - Cores chegam como uint16_t RGB565 nativo; o LCD_CAM troca os bytes
  *    (flags.swap_color_bytes) para o ILI9341 receber o byte alto primeiro.
  */
-#include <string.h>
 #include "sdkconfig.h"
+
+/* Compila so se a tela escolhida no menuconfig NAO for o modulo SPI (lcd_spi):
+ * os dois definem gfx_*, e so um pode existir no firmware. */
+#if !CONFIG_PORTATIL_TELA_SPI
+
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -259,3 +264,5 @@ esp_err_t lcd_i80_init(void)
     ESP_LOGI(TAG, "ILI9341 i80 8 bits pronto (%d Hz)", CONFIG_LCD_I80_PCLK_HZ);
     return ESP_OK;
 }
+
+#endif /* !CONFIG_PORTATIL_TELA_SPI */
